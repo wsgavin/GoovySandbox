@@ -20,6 +20,7 @@
 // TODO: Find a way to lookup currency symbol.
 // TODO: Get code formatting to work in sublilme with BUSL.
 // TODO: Possibly provide an interactive mode (for fun).
+// TODO: Ass base currency configuration.
 
 
 import groovy.json.JsonSlurper
@@ -28,21 +29,24 @@ import groovy.json.JsonOutput
 
 class OpenExchangeRates {
 
-    // API key for https://openexchangerates.org/
-    private key = "13a2d80764d04cf599f5173451d4d603"
-
-    // Base URL for requests
-    private endPoint = "https://openexchangerates.org/api/"
-
     // Building URL for latest currency values.
-    private latestUrlString = "${endPoint}latest.json?app_id=$key"
+    private latestUrlString
 
     // Building URL for available currencies.
-    private currencyCodeURL = "${endPoint}currencies.json?app_id=$key"
-
-    private def slurper = new JsonSlurper();
+    private currencyCodeURL
 
     OpenExchangeRates() {
+
+        def json = new File("ExchangeRate.json")
+
+        def config = new JsonSlurper().parseText(json.text)
+
+        assert config
+        assert config.api_url
+        assert config.api_key
+
+        latestUrlString = "${config.api_url}latest.json?app_id=${config.api_key}"
+        currencyCodeURL = "${config.api_url}currencies.json?app_id=${config.api_key}"
         
     }
 
@@ -52,7 +56,7 @@ class OpenExchangeRates {
 
         assert httpConnection.responseCode == httpConnection.HTTP_OK
 
-        def result = slurper.parse(httpConnection.inputStream.newReader())
+        def result = new JsonSlurper().parse(httpConnection.inputStream.newReader())
 
     }
 
@@ -62,7 +66,7 @@ class OpenExchangeRates {
 
         assert httpConnection.responseCode == httpConnection.HTTP_OK
 
-        def result = slurper.parse(httpConnection.inputStream.newReader())
+        def result = new JsonSlurper().parse(httpConnection.inputStream.newReader())
 
     }
 }
