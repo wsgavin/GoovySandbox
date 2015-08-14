@@ -9,7 +9,6 @@
  
  */
 
-// TODO: Get code on github.
 // TODO: Better understand the appropriate usage of assert. 
 // TODO: Reduce request down to currencies.
 // TODO: Find out if using main is best practice.
