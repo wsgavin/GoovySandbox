@@ -6,21 +6,27 @@
  
   This utility was written to explore some basic parts of groovy. Its
   not intended to be an actual utility used on a regular basis.
+
+  The Open Exchange Rates service provides both free and pay subscriptions. For
+  this script I only setup the free subscription. This script could be updated
+  to support additional features e.g. changing the base currency, requesting
+  specific currencies.
+
+  Future enhancements for paid service:
+
+  - Pull rates for specific currencies.
+  - Set the base currency.
  
  */
 
 // TODO: Better understand the appropriate usage of assert. 
-// TODO: Reduce request down to currencies.
 // TODO: Find out if using main is best practice.
 // TODO: Build out the CliBuilder with more options e.g. convert etc.
 // TODO: Add command line option to list all currency codes.
 // TODO: Add command line option to search currency codes or descriptions.
-// TODO: Create class.
-// TODO: Add command line option for rounding .round(#).
 // TODO: Find a way to lookup currency symbol.
-// TODO: Get code formatting to work in sublilme with BUSL.
-// TODO: Possibly provide an interactive mode (for fun).
-// TODO: Ass base currency configuration.
+// TODO: Look up currency codes in file, if exist, or download.
+// TODO: Catch errors from API (e.g. setting base)
 
 
 import groovy.json.JsonSlurper
@@ -35,18 +41,24 @@ class OpenExchangeRates {
     // Building URL for available currencies.
     private currencyCodeURL
 
+    // JsonSlurper
+    private js
+
     OpenExchangeRates() {
 
-        def json = new File("ExchangeRate.json")
+        js = new JsonSlurper()
 
-        def config = new JsonSlurper().parseText(json.text)
+        def config = js.parseText(new File("ExchangeRate.json").text)
 
         assert config
         assert config.api_url
         assert config.api_key
+        assert config.base_currency
 
-        latestUrlString = "${config.api_url}latest.json?app_id=${config.api_key}"
-        currencyCodeURL = "${config.api_url}currencies.json?app_id=${config.api_key}"
+        def parameters = "app_id=${config.api_key}&base=${config.base_currency}"
+
+        latestUrlString = "${config.api_url}latest.json?${parameters}"
+        currencyCodeURL = "${config.api_url}currencies.json?${parameters}"
         
     }
 
@@ -56,7 +68,7 @@ class OpenExchangeRates {
 
         assert httpConnection.responseCode == httpConnection.HTTP_OK
 
-        def result = new JsonSlurper().parse(httpConnection.inputStream.newReader())
+        def result = js.parse(httpConnection.inputStream.newReader())
 
     }
 
@@ -66,7 +78,7 @@ class OpenExchangeRates {
 
         assert httpConnection.responseCode == httpConnection.HTTP_OK
 
-        def result = new JsonSlurper().parse(httpConnection.inputStream.newReader())
+        def result = js.parse(httpConnection.inputStream.newReader())
 
     }
 }
@@ -77,7 +89,12 @@ class OpenExchangeRates {
 
 
 // Building basic CliBuilder.
-def cli = new CliBuilder( usage:'groovy ExchangeRate [currency]' )
+def cli = new CliBuilder( usage:'groovy ExchangeRate [options] <currency/search>' )
+
+cli.h(longOpt:'help', 'Displays usage')
+cli.s(longOpt:'search', 'Search for a currency code')
+cli._(longOpt:'disclaimer', 'Display disclaimer')
+cli._(longOpt:'license', 'Display license agreement')
 
 
 // Validating that arguments have been passed, if not exit.
@@ -93,7 +110,14 @@ if ( ! args ) {
 // Retrieving options passed via the command line and asserting they exist.
 def options = cli.parse( args )
 
-assert options && options.arguments()
+assert options
+
+if (options.h) {
+    cli.usage()
+    System.exit(0)
+}
+
+assert options.arguments()
 
 // Retrieving arguments and asserting a few things.
 def arguments = options.arguments()
@@ -144,6 +168,11 @@ arguments.each {
 
 def latest = oer.latest(arguments)
 
+if (options.disclaimer) { println "\nDISCLAIMER\n\n$latest.disclaimer\n" }
+if (options.license) { println "\nLICENSE\n\n$latest.license\n" }
+
+
+println "CODE,RATE,INVERSE,TIMESTAMP,DESCRIPTION"
 
 // Print each currency, rate and description.
 arguments.each {
@@ -152,7 +181,7 @@ arguments.each {
     def rate = latest.rates[ it ]
     def inverse = 1 / rate
 
-    println "$it:$rate:$inverse:$descr"
+    println "$it,$rate,$inverse,$latest.timestamp,$descr"
 
 }
 
