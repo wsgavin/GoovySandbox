@@ -174,22 +174,22 @@ if (options.search) {
         
         
         
-        // Validating that each currency argument passed is in the correct form.
-        arguments.each {
-        
-            if ( ! ( it ==~ ( /[A-Z]{3}/ ) ) ) {
-        
-                println ""
-                println "Currency codes can only contain 3 characters [a-zA-Z]."
-                println "$it is not in propper form, e.g. USD"
-                println ""
-        
-                cli.usage()
-        
-                System.exit(0)
-        
-            }
-        }
+// Validating that each currency argument passed is in the correct form.
+arguments.each {
+
+    if ( ! ( it ==~ ( /[A-Z]{3}/ ) ) ) {
+
+        println ""
+        println "Currency codes can only contain 3 characters [a-zA-Z]."
+        println "$it is not in propper form, e.g. USD"
+        println ""
+
+        cli.usage()
+
+        System.exit(0)
+
+    }
+}
         
 // Validating that the currencies passed as arguments exists.
 arguments.each { 
