@@ -28,10 +28,10 @@
 // TODO: Look up currency codes in file, if exist, or download.
 // TODO: Catch errors from API (e.g. setting base)
 
+package com.dubelyoo
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
-
 
 class OpenExchangeRates {
 
@@ -48,7 +48,7 @@ class OpenExchangeRates {
 
         js = new JsonSlurper()
 
-        def config = js.parseText(new File("ExchangeRate.json").text)
+        def config = js.parseText new File("ExchangeRate.json").text
 
         assert config
         assert config.api_url
@@ -68,7 +68,7 @@ class OpenExchangeRates {
 
         assert httpConnection.responseCode == httpConnection.HTTP_OK
 
-        def result = js.parse(httpConnection.inputStream.newReader())
+        def result = js.parse httpConnection.inputStream.newReader()
 
     }
 
@@ -78,23 +78,19 @@ class OpenExchangeRates {
 
         assert httpConnection.responseCode == httpConnection.HTTP_OK
 
-        def result = js.parse(httpConnection.inputStream.newReader())
+        def result = js.parse httpConnection.inputStream.newReader()
 
     }
+
 }
-
-
-
-
-
 
 // Building basic CliBuilder.
 def cli = new CliBuilder( usage:'groovy ExchangeRate [options] <currency/search>' )
 
-cli.h(longOpt:'help', 'Displays usage')
-cli.s(longOpt:'search', 'Search for a currency code')
-cli._(longOpt:'disclaimer', 'Display disclaimer')
-cli._(longOpt:'license', 'Display license agreement')
+cli.h longOpt:'help', 'Displays usage'
+cli.s longOpt:'search', 'Search for a currency code'
+cli._ longOpt:'disclaimer', 'Display disclaimer'
+cli._ longOpt:'license', 'Display license agreement'
 
 
 // Validating that arguments have been passed, if not exit.
@@ -166,7 +162,7 @@ arguments.each {
 
 }
 
-def latest = oer.latest(arguments)
+def latest = oer.latest arguments
 
 if (options.disclaimer) { println "\nDISCLAIMER\n\n$latest.disclaimer\n" }
 if (options.license) { println "\nLICENSE\n\n$latest.license\n" }
