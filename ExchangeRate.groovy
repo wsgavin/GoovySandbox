@@ -91,6 +91,7 @@ cli.h longOpt:'help', 'Displays usage'
 cli.s longOpt:'search', 'Search for a currency code'
 cli._ longOpt:'disclaimer', 'Display disclaimer'
 cli._ longOpt:'license', 'Display license agreement'
+cli._ longOpt:'currencies', 'Displays all available currencies'
 
 
 // Validating that arguments have been passed, if not exit.
@@ -98,13 +99,13 @@ if ( ! args ) {
 
     cli.usage()
 
-    System.exit( 0 )
+    System.exit(0)
 
 }
 
 
 // Retrieving options passed via the command line and asserting they exist.
-def options = cli.parse( args )
+def options = cli.parse args
 
 assert options
 
@@ -113,6 +114,28 @@ if (options.h) {
     System.exit(0)
 }
 
+
+
+def oer = new OpenExchangeRates()
+
+def currencyCodes = oer.currencyCodes()
+
+assert currencyCodes
+
+
+// Display all available currency codes and descriptions.
+// Will exit after all are printed to STDOUT.
+if (options.currencies) {
+
+    currencyCodes.each { code, descr ->
+        println "$code,$descr"
+    }
+
+    System.exit(0)
+}
+
+
+// At this point there must be currency codes passed.
 assert options.arguments()
 
 // Retrieving arguments and asserting a few things.
@@ -138,13 +161,6 @@ arguments.each {
     }
 }
 
-
-def oer = new OpenExchangeRates()
-
-def currencyCodes = oer.currencyCodes()
-
-assert currencyCodes
-
 // Validating that the currencies passed as arguments exists.
 arguments.each { 
 
@@ -152,7 +168,7 @@ arguments.each {
     if ( ! currencyCodes[it] ) {
         
         println ""
-        println "The currency code provided cannot be found."
+        println "The currency $it code provided cannot be found."
         println ""
         
         cli.usage()
@@ -173,8 +189,8 @@ println "CODE,RATE,INVERSE,TIMESTAMP,DESCRIPTION"
 // Print each currency, rate and description.
 arguments.each {
 
-    def descr = currencyCodes[ it ]
-    def rate = latest.rates[ it ]
+    def descr = currencyCodes[it]
+    def rate = latest.rates[it]
     def inverse = 1 / rate
 
     println "$it,$rate,$inverse,$latest.timestamp,$descr"
