@@ -21,9 +21,7 @@
 
 // TODO: Better understand the appropriate usage of assert. 
 // TODO: Find out if using main is best practice.
-// TODO: Build out the CliBuilder with more options e.g. convert etc.
-// TODO: Add command line option to list all currency codes.
-// TODO: Add command line option to search currency codes or descriptions.
+
 // TODO: Find a way to lookup currency symbol.
 // TODO: Look up currency codes in file, if exist, or download.
 // TODO: Catch errors from API (e.g. setting base)
@@ -110,8 +108,11 @@ def options = cli.parse args
 assert options
 
 if (options.h) {
+
     cli.usage()
+
     System.exit(0)
+
 }
 
 
@@ -134,7 +135,6 @@ if (options.currencies) {
     System.exit(0)
 }
 
-
 // At this point there must be currency codes passed.
 assert options.arguments()
 
@@ -144,23 +144,53 @@ def arguments = options.arguments()
 assert arguments && arguments.size() > 0
 
 
-// Validating that each currency argument passed is in the correct form.
-arguments.each {
 
-    if ( ! ( it ==~ ( /[A-Z]{3}/ ) ) ) {
+if (options.search) {
 
-        println ""
-        println "Currency codes can only contain 3 characters [a-zA-Z]."
-        println "$it is not in propper form, e.g. USD"
-        println ""
+    def argsLC = arguments[0].toLowerCase()
 
-        cli.usage()
-
-        System.exit(0)
+    def matches = currencyCodes.findAll { entry ->
+        
+        entry.key.toLowerCase().find(argsLC) ||
+            entry.value.toLowerCase().find(argsLC)
 
     }
-}
 
+    if ( ! matches ) {
+
+        println ""
+        println "No matches found for \"${arguments[0]}\"."
+        println ""
+
+    } else {
+
+        matches.each { code, descr -> println "$code,$descr" }
+
+    }
+
+     System.exit(0)
+
+}
+        
+        
+        
+        // Validating that each currency argument passed is in the correct form.
+        arguments.each {
+        
+            if ( ! ( it ==~ ( /[A-Z]{3}/ ) ) ) {
+        
+                println ""
+                println "Currency codes can only contain 3 characters [a-zA-Z]."
+                println "$it is not in propper form, e.g. USD"
+                println ""
+        
+                cli.usage()
+        
+                System.exit(0)
+        
+            }
+        }
+        
 // Validating that the currencies passed as arguments exists.
 arguments.each { 
 
