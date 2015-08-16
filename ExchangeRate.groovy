@@ -1,9 +1,9 @@
 /*
- 
+
   Exchange Rate Utility
-  
+
   Author: Warren Gavin
- 
+
   This utility was written to explore some basic parts of groovy. Its
   not intended to be an actual utility used on a regular basis.
 
@@ -16,13 +16,13 @@
 
   - Pull rates for specific currencies.
   - Set the base currency.
- 
+
  */
 
-// TODO: Better understand the appropriate usage of assert. 
+// TODO: Better understand the appropriate usage of assert.
 // TODO: Find out if using main is best practice.
 
-// TODO: Find a way to lookup currency symbol.
+// TODO: Find a way to lookup currency symbol, e.g. $
 // TODO: Look up currency codes in file, if exist, or download.
 // TODO: Catch errors from API (e.g. setting base)
 
@@ -57,7 +57,7 @@ class OpenExchangeRates {
 
         latestUrlString = "${config.api_url}latest.json?${parameters}"
         currencyCodeURL = "${config.api_url}currencies.json?${parameters}"
-        
+
     }
 
     def latest(codes) {
@@ -150,7 +150,7 @@ if (options.search) {
     def argsLC = arguments[0].toLowerCase()
 
     def matches = currencyCodes.findAll { entry ->
-        
+
         entry.key.toLowerCase().find(argsLC) ||
             entry.value.toLowerCase().find(argsLC)
 
@@ -171,9 +171,9 @@ if (options.search) {
      System.exit(0)
 
 }
-        
-        
-        
+
+
+
 // Validating that each currency argument passed is in the correct form.
 arguments.each {
 
@@ -190,17 +190,17 @@ arguments.each {
 
     }
 }
-        
+
 // Validating that the currencies passed as arguments exists.
-arguments.each { 
+arguments.each {
 
     // If the currency is not found, display message to the user and exit.
     if ( ! currencyCodes[it] ) {
-        
+
         println ""
         println "The currency $it code provided cannot be found."
         println ""
-        
+
         cli.usage()
 
         System.exit( 0 )
