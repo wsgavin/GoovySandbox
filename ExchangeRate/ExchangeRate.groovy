@@ -30,6 +30,7 @@ package com.dubelyoo
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
+import groovy.json.JsonBuilder
 
 class OpenExchangeRates {
 
@@ -72,11 +73,31 @@ class OpenExchangeRates {
 
     def currencyCodes() {
 
-        def httpConnection = currencyCodeURL.toURL().openConnection()
+        def currencyFile = new File('currencies.json')
 
-        assert httpConnection.responseCode == httpConnection.HTTP_OK
+        if (currencyFile.exists()) {
 
-        def result = js.parse httpConnection.inputStream.newReader()
+            def result = js.parseText currencyFile.text
+
+            assert result.size() > 160 // Making sure we have some values.
+
+            result
+
+        } else {
+
+            def httpConnection = currencyCodeURL.toURL().openConnection()
+
+            assert httpConnection.responseCode == httpConnection.HTTP_OK
+
+            def result = js.parse httpConnection.inputStream.newReader()
+
+            new File('currencies.json').write(new JsonBuilder(result).toPrettyString())
+
+            result
+
+        }
+
+
 
     }
 
