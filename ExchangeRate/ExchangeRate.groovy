@@ -1,22 +1,21 @@
-/*
-
-  Exchange Rate Utility
-
-  Author: Warren Gavin
-
-  This utility was written to explore some basic parts of groovy. Its
-  not intended to be an actual utility used on a regular basis.
-
-  The Open Exchange Rates service provides both free and pay subscriptions. For
-  this script I only setup the free subscription. This script could be updated
-  to support additional features e.g. changing the base currency, requesting
-  specific currencies.
-
-  Future enhancements for paid service:
-
-  - Pull rates for specific currencies.
-  - Set the base currency.
-
+/**
+ *
+ * Exchange Rate Utility
+ *
+ * Author: Warren Gavin
+ *
+ * This utility was written to explore some basic parts of groovy. Its
+ * not intended to be an actual utility used on a regular basis.
+ *
+ * The Open Exchange Rates service provides both free and pay subscriptions. For
+ * this script I only setup the free subscription. This script could be update
+ * to support additional features e.g. changing the base currency, requesting
+ * specific currencies.
+ *
+ * Future enhancements for paid service:
+ *
+ *   - Pull rates for specific currencies.
+ *   - Set the base currency.
  */
 
 // TODO: Better understand the appropriate usage of assert.
@@ -26,10 +25,7 @@
 // TODO: Look up currency codes in file, if exist, or download.
 // TODO: Catch errors from API (e.g. setting base)
 
-package com.dubelyoo
-
 import groovy.json.JsonSlurper
-import groovy.json.JsonOutput
 import groovy.json.JsonBuilder
 
 class OpenExchangeRates {
@@ -43,11 +39,51 @@ class OpenExchangeRates {
     // JsonSlurper
     private js
 
+    // TODO: The following closures should be pulled out and into a new class.
+
+    /**
+     * Retrieve JSON via a URL.
+     */
+    private getJsonURL = { urlString ->
+
+        def httpConnection = urlString.toURL().openConnection()
+
+        assert httpConnection.responseCode == httpConnection.HTTP_OK
+
+        js.parse httpConnection.inputStream.newReader()
+
+    }
+
+    /**
+     * Reads a file and returns an collection based on the JSON.
+     *
+     * TODO: Check to see if file exists before reading.
+     */
+    private getJsonFile = { fileName ->
+
+        new JsonSlurper().parseText new File(fileName).text
+
+    }
+
+    /**
+     * Writes to a file in JSON format. File will be overwritten if exists.
+     *
+     * TODO: check if data is json friendly.
+     */
+    private writeJsonFile = { fileName, data ->
+
+        new File(fileName).write(new JsonBuilder(data).toPrettyString())
+
+    }
+
+    /**
+     *
+     */
     OpenExchangeRates() {
 
         js = new JsonSlurper()
 
-        def config = js.parseText new File("ExchangeRate.json").text
+        def config = getJsonFile "ExchangeRate.json"
 
         assert config
         assert config.api_url
@@ -61,23 +97,28 @@ class OpenExchangeRates {
 
     }
 
+    /**
+     * [latest description]
+     * @return [description]
+     */
     def latest(codes) {
 
-        def httpConnection = latestUrlString.toURL().openConnection()
-
-        assert httpConnection.responseCode == httpConnection.HTTP_OK
-
-        def result = js.parse httpConnection.inputStream.newReader()
+        getJsonURL latestUrlString
 
     }
 
+    /**
+     * [currencyCodes description]
+     * @return [description]
+     */
     def currencyCodes() {
 
+        // TODO: Fix this, no need.
         def currencyFile = new File('currencies.json')
 
         if (currencyFile.exists()) {
 
-            def result = js.parseText currencyFile.text
+            def result = getJsonFile 'currencies.json'
 
             assert result.size() > 160 // Making sure we have some values.
 
@@ -85,18 +126,13 @@ class OpenExchangeRates {
 
         } else {
 
-            def httpConnection = currencyCodeURL.toURL().openConnection()
+            def result = getJsonURL currencyCodeURL
 
-            assert httpConnection.responseCode == httpConnection.HTTP_OK
-
-            def result = js.parse httpConnection.inputStream.newReader()
-
-            new File('currencies.json').write(new JsonBuilder(result).toPrettyString())
+            writeJsonFile 'currencies.json', result
 
             result
 
         }
-
 
 
     }
@@ -104,24 +140,22 @@ class OpenExchangeRates {
 }
 
 // Building basic CliBuilder.
-def cli = new CliBuilder( usage:'groovy ExchangeRate [options] <currency/search>' )
+def cli = new CliBuilder(usage: 'groovy ExchangeRate [options] <currency/search>')
 
-cli.h longOpt:'help', 'Displays usage'
-cli.s longOpt:'search', 'Search for a currency code'
-cli._ longOpt:'disclaimer', 'Display disclaimer'
-cli._ longOpt:'license', 'Display license agreement'
-cli._ longOpt:'currencies', 'Displays all available currencies'
-
+cli.h longOpt: 'help', 'Displays usage'
+cli.s longOpt: 'search', 'Search for a currency code'
+cli._ longOpt: 'disclaimer', 'Display disclaimer'
+cli._ longOpt: 'license', 'Display license agreement'
+cli._ longOpt: 'currencies', 'Displays all available currencies'
 
 // Validating that arguments have been passed, if not exit.
-if ( ! args ) {
+if (!args) {
 
     cli.usage()
 
     System.exit(0)
 
 }
-
 
 // Retrieving options passed via the command line and asserting they exist.
 def options = cli.parse args
@@ -143,7 +177,6 @@ def oer = new OpenExchangeRates()
 def currencyCodes = oer.currencyCodes()
 
 assert currencyCodes
-
 
 // Display all available currency codes and descriptions.
 // Will exit after all are printed to STDOUT.
@@ -173,11 +206,11 @@ if (options.search) {
     def matches = currencyCodes.findAll { entry ->
 
         entry.key.toLowerCase().find(argsLC) ||
-            entry.value.toLowerCase().find(argsLC)
+                entry.value.toLowerCase().find(argsLC)
 
     }
 
-    if ( ! matches ) {
+    if (!matches) {
 
         println ""
         println "No matches found for \"${arguments[0]}\"."
@@ -189,16 +222,14 @@ if (options.search) {
 
     }
 
-     System.exit(0)
+    System.exit(0)
 
 }
-
-
 
 // Validating that each currency argument passed is in the correct form.
 arguments.each {
 
-    if ( ! ( it ==~ ( /[A-Z]{3}/ ) ) ) {
+    if (!(it ==~ (/[A-Z]{3}/))) {
 
         println ""
         println "Currency codes can only contain 3 characters [a-zA-Z]."
@@ -216,7 +247,7 @@ arguments.each {
 arguments.each {
 
     // If the currency is not found, display message to the user and exit.
-    if ( ! currencyCodes[it] ) {
+    if (!currencyCodes[it]) {
 
         println ""
         println "The currency $it code provided cannot be found."
@@ -224,15 +255,19 @@ arguments.each {
 
         cli.usage()
 
-        System.exit( 0 )
+        System.exit(0)
     }
 
 }
 
 def latest = oer.latest arguments
 
-if (options.disclaimer) { println "\nDISCLAIMER\n\n$latest.disclaimer\n" }
-if (options.license) { println "\nLICENSE\n\n$latest.license\n" }
+if (options.disclaimer) {
+    println "\nDISCLAIMER\n\n$latest.disclaimer\n"
+}
+if (options.license) {
+    println "\nLICENSE\n\n$latest.license\n"
+}
 
 
 println "CODE,RATE,INVERSE,TIMESTAMP,DESCRIPTION"
